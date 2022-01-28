@@ -1,0 +1,128 @@
+{
+    "cells": [
+        {
+            "language": "markdown",
+            "source": [
+                "# Find the column index in a matrices"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "const rows = [\n\t['a', 'f', 'k', 'p', 'u'],\n\t['b', 'g', 'l', 'q', 'v'],\n\t['c', 'h', 'm', 'r', 's'],\n\t['d', 'i', 'n', 's', 'x'],\n\t['e', 'j', 'o', 't', 'y']\n];"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Traditional way"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "findTrad = (m, search_string) => {\n\tfor (let i = 0; i<m.length; i++) {\n\t\trow = m[i]\n\t\tfor (let j = 0; j<row.length; j++) {\n\t\t\tif (m[i][j] == search_string) {\n\t\t\t\treturn j;\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}\n\nconsole.log(`column idx for s is: ${findTrad(rows, 's')}`)\nconsole.log(`column idx for z is: ${findTrad(rows, 'z')}`)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "column idx for s is: 4",
+                                "column idx for z is: -1",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Functional way using map\nOne problem with this approach: It will scan all the cells before returning.  The bigger the matrices the longer it will take."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "// This will go through an array\nfindAllMatching = (m, search_string) =>\n  []\n    .concat(...m.map((row, i) => row.map((item, j) => item === search_string ? [[i, j]] : [])\n      .filter(coord => coord.length)\n    )\n)\nres = findAllMatching(rows, 's')\nconsole.log(`${JSON.stringify(res)}`)\nconsole.log(`${JSON.stringify(res.flat())}`)\nconsole.log(`column idx for s is: ${JSON.stringify(res.flat()[0][1])}`)\nconsole.log(`column idx for z is: ${JSON.stringify(findAllMatching(rows, 'z'))}`)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "[[[2,4]],[[3,3]]]",
+                                "[[2,4],[3,3]]",
+                                "column idx for s is: 4",
+                                "column idx for z is: []",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Functional way using findIndex\nThis works well, except you need to have a mutable colIndex variable due to the double find."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "findByIndexMatching = (m, search_string) => {\n\tlet colIndex = -1;\n\tm.findIndex((row) => {\n\t\tcolIndex = row.findIndex(item => item == search_string)\n\t\treturn colIndex != -1\n\t});\n\treturn colIndex\n}\nconsole.log(`column idx for s is: ${findByIndexMatching(rows, 's')}`)\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "column idx for s is: 4",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Functional way with no mutable variable\nExcept this requires to have the same number of columns in every rows."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "javascript",
+            "source": [
+                "import R from 'ramda'\n\n// Better way would be to create a length function that would return a Maybe\n// And a mod method as well\nconst rowLength = R.curry(R.compose(R.length, R.head))  // point free - get the length of the first row\nconst mod = R.curry((a,b) => b%a)\n\n//console.log(14%5)\nfindImmutable = (m, search_string) => R.compose(\n\tmod(rowLength(m)),\n\tR.findIndex(i => i == search_string), \n\tR.flatten)(m)\n//m.flat().findIndex(item => item == search_string) % m[0].length\n\n// This solution will not work if the matrix rows have different column size\nconsole.log(`column idx for s is: ${findImmutable(rows, 's')}`)\nconsole.log(`column idx for z is: ${findImmutable(rows, 'z')}`)\nconsole.log(`column idx for z e is: ${findImmutable([], 'z')}`)  // This is not monadic\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "column idx for s is: 4",
+                                "column idx for z is: -1",
+                                "column idx for z e is: NaN",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
